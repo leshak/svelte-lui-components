@@ -1,0 +1,9 @@
+{
+	"name": "svelte-lui-components",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {},
+	"devDependencies": {},
+	"type": "module",
+	"dependencies": {}
+}

@@ -1,39 +1,50 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import { cn } from '$lib/utils.js';
 
 	import * as Select from '$lib/components/ui/select';
 	import { Label } from '$lib/components/ui/label';
+	import type { PropChangedEvent } from '../types';
 
-	const dispatch = createEventDispatcher();
-
-	export let value: any | string;
-	export let values: any[] = [];
-
-	export let label: string;
-	export let labelHide: boolean = false;
-	export let small: boolean = false;
-	export let prop: string;
-	export let placeholder: string = '';
-	export let defaultValue: any = '';
-	export let optional: boolean = false;
-
-	let validSuccess: boolean = true;
-	let validError: string | undefined = undefined;
-
-	let val: { value: string; label: string; disabled: boolean };
-
-	$: {
-		val = {
-			value: value || defaultValue,
-			label: value || defaultValue,
-			disabled: false,
-		};
+	interface Props {
+		value: any | string;
+		values?: any[];
+		label: string;
+		labelHide?: boolean;
+		small?: boolean;
+		prop: string;
+		placeholder?: string;
+		defaultValue?: any;
+		optional?: boolean;
+		onPropChanged?: (event: PropChangedEvent) => void;
 	}
 
+	let {
+		value,
+		values = [],
+		label,
+		labelHide = false,
+		small = false,
+		prop,
+		placeholder = '',
+		defaultValue = '',
+		optional = false,
+		onPropChanged = () => {},
+	}: Props = $props();
+
+	let validSuccess: boolean = $state(true);
+	let validError: string | undefined = $state(undefined);
+
+	let val: string = $state('');
+	const selectedLabel = $derived(values.find((v) => v === val) || placeholder);
+
+	$effect(() => {
+		val = value;
+	});
+
 	function onSelectedChange(v: any) {
-		onValueChanged(v.value);
+		onValueChanged(v);
 	}
 
 	function onValueChanged(v: string) {
@@ -44,14 +55,14 @@
 		const idx = values.indexOf(vv);
 		if (idx === -1) {
 			if (optional) {
-				dispatch('modelChanged', { success: true, value: undefined, prop });
+				onPropChanged({ success: true, value: undefined, prop });
 			} else {
 				validSuccess = false;
 				validError = 'Неизвестное значение';
-				dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+				onPropChanged({ success: validSuccess, prop, error: validError });
 			}
 		} else {
-			dispatch('modelChanged', { success: validSuccess, value: vv, prop });
+			onPropChanged({ success: validSuccess, value: vv, prop });
 		}
 	}
 
@@ -70,7 +81,7 @@
 			>{label}</Label
 		>
 	{/if}
-	<Select.Root {onSelectedChange} selected={val}>
+	<Select.Root type="single" onValueChange={onSelectedChange} value={val}>
 		<Select.Trigger
 			class={cn(
 				'w-[100%] pr-2',
@@ -78,14 +89,13 @@
 				small && 'h-6 px-2 text-xs',
 			)}
 		>
-			<Select.Value {placeholder} />
+			{selectedLabel}
 		</Select.Trigger>
 		<Select.Content>
 			{#each values as v}
 				<Select.Item value={v} class={cn(small && 'h-6 px-2 text-xs')}>{v}</Select.Item>
 			{/each}
 		</Select.Content>
-		<Select.Input name={prop} />
 	</Select.Root>
 	{#if !validSuccess}
 		<div class={cn('text-[0.8rem] text-red-500', small && 'text-[0.7rem]')}>{validError}</div>

@@ -12,6 +12,7 @@ export interface DataFormProp {
 	hide?: boolean;
 	labelHide?: boolean;
 	autoFocus?: boolean;
+	codeLength?: number;
 }
 
 export interface DataFormPropSelectId {
@@ -34,9 +35,17 @@ export const DataFormType = {
 	NumberMinMax: 11,
 	Phone: 12,
 	Password: 13,
+	OtpCode: 14,
 };
 
 export type TSelectItem = {
 	val: number | string;
 	label: string;
+};
+
+export type PropChangedEvent = {
+	prop: string;
+	value?: string | number | boolean | string[] | number[];
+	success?: boolean;
+	error?: string;
 };

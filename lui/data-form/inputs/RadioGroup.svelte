@@ -1,53 +1,64 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import { cn } from '$lib/utils.js';
 
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Label } from '$lib/components/ui/label';
+	import type { PropChangedEvent } from '../types';
 
-	const dispatch = createEventDispatcher();
-
-	export let value: any | string;
-	export let values: any[] = [];
-	export let intType: boolean = false;
-
-	export let label: string;
-	export let labelHide: boolean = false;
-	export let small: boolean = false;
-	export let prop: string;
-	export let defaultValue: any = '';
-	export let optional: boolean = false;
-	export let vertical: boolean = false;
-
-	let validSuccess: boolean = true;
-	let validError: string | undefined = undefined;
-
-	let val: any;
-
-	$: {
-		val = value;
+	interface Props {
+		value: any | string;
+		values?: any[];
+		intType?: boolean;
+		label: string;
+		labelHide?: boolean;
+		small?: boolean;
+		prop: string;
+		defaultValue?: any;
+		optional?: boolean;
+		vertical?: boolean;
+		onPropChanged?: (event: PropChangedEvent) => void;
 	}
 
-	function onValueChanged(v: any) {
-		val = v;
+	let {
+		value,
+		values = [],
+		intType = false,
+		label,
+		labelHide = false,
+		small = false,
+		prop,
+		defaultValue = '',
+		optional = false,
+		vertical = false,
+		onPropChanged = () => {},
+	}: Props = $props();
 
-		const vv = intType ? parseInt(v || defaultValue, 10) : v || defaultValue;
+	let validSuccess: boolean = $state(true);
+	let validError: string | undefined = $state(undefined);
+
+	let val = $state('');
+
+	function onValueChanged(v: any) {
+		let vv = v !== undefined ? v : defaultValue;
+		vv = intType ? parseInt(vv, 10) : vv;
+
 		validSuccess = true;
 		validError = '';
 
 		const idx = values.findIndex((x) => x.val === vv);
 		if (idx === -1) {
 			if (optional) {
-				dispatch('modelChanged', { success: true, value: undefined, prop });
+				onPropChanged({ success: true, value: undefined, prop });
 			} else {
 				validSuccess = false;
 				validError = 'Неизвестное значение';
-				dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+				onPropChanged({ success: validSuccess, prop, error: validError });
 			}
 		} else {
-			dispatch('modelChanged', { success: validSuccess, value: vv, prop });
-			currentValue = String(vv);
+			onPropChanged({ success: validSuccess, value: vv, prop });
+			val = vv;
 		}
 	}
 
@@ -58,11 +69,6 @@
 	onMount(() => {
 		validateInitValue();
 	});
-
-	let currentValue: string;
-	$: {
-		onValueChanged(currentValue);
-	}
 </script>
 
 <div class="flex flex-col">
@@ -74,18 +80,18 @@
 
 	<RadioGroup.Root
 		onValueChange={onValueChanged}
-		bind:value={currentValue}
+		value={String(val)}
 		class={cn('flex', vertical ? 'flex-col' : 'mt-2.5', small && 'mt-0')}
 	>
 		{#each values as v, i}
 			<div class={cn('flex items-center space-x-1', vertical && 'space-x-2')}>
-				<RadioGroup.Item value={String(v.val)} id={`rg-${prop}-${i}`} />
-				<Label for={`rg-${prop}-${i}`} class={cn('cursor-pointer', small && 'text-xs')}
-					>{v.label}</Label
+				<RadioGroup.Item value={String(v.val)} id={`rg-${prop.replaceAll('.', '_')}-${i}`} />
+				<Label
+					for={`rg-${prop.replaceAll('.', '_')}-${i}`}
+					class={cn('cursor-pointer', small && 'text-xs')}>{v.label}</Label
 				>
 			</div>
 		{/each}
-		<RadioGroup.Input name="spacing" />
 	</RadioGroup.Root>
 
 	{#if !validSuccess}

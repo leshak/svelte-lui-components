@@ -5,8 +5,8 @@
 	import { cn } from '$lib/utils.js';
 
 	import { Label } from '$lib/components/ui/label';
-	import { Input } from '$lib/components/ui/input';
 	import type { PropChangedEvent } from '../types';
+	import SvelteOtp from '../otp-input/SvelteOtp.svelte';
 
 	interface Props {
 		value: any | string;
@@ -18,6 +18,7 @@
 		defaultValue?: any;
 		optional?: boolean;
 		autoFocus?: boolean;
+		codeLength?: number;
 		onPropChanged?: (event: PropChangedEvent) => void;
 	}
 
@@ -27,31 +28,27 @@
 		labelHide = false,
 		small = false,
 		prop,
-		placeholder = '',
-		defaultValue = '',
-		optional = false,
-		autoFocus = false,
+		codeLength = 4,
 		onPropChanged = () => {},
 	}: Props = $props();
 
-	let validator:
-		| z.ZodString
-		| z.ZodDefault<z.ZodString>
-		| z.ZodDefault<z.ZodOptional<z.ZodString>>
-		| z.ZodOptional<z.ZodDefault<z.ZodString>>
-		| z.ZodOptional<z.ZodString>;
+	let validator = z.string({
+		required_error: `${label} обязательно`,
+		invalid_type_error: `${label} должен быть строкой`,
+	});
 
 	let validSuccess: boolean = $state(true);
 	let validError: string | undefined = $state(undefined);
 
-	let val: string = $derived(value);
+	let valCode: string = $state('');
 
-	function onInputChange(ev: any) {
-		const val = ev.target.value;
-		onValueChanged(val);
-	}
+	$effect(() => {
+		onValueChanged(valCode);
+	});
 
 	function onValueChanged(v: string, showError: boolean = true) {
+		if (v === undefined) return;
+
 		const valid = validator.safeParse(v);
 
 		validSuccess = valid.success;
@@ -76,21 +73,6 @@
 	}
 
 	onMount(() => {
-		validator = z.string({
-			required_error: `${label} обязательно`,
-			invalid_type_error: `${label} должен быть строкой`,
-		});
-
-		if (optional) {
-			validator = validator.optional();
-		} else {
-			validator = validator.min(1, { message: 'Это поле не может быть пустым' });
-		}
-
-		if (defaultValue) {
-			validator = validator.default(defaultValue);
-		}
-
 		validateInitValue();
 	});
 </script>
@@ -101,18 +83,15 @@
 			>{label}</Label
 		>
 	{/if}
-	<Input
-		id={prop}
-		type="password"
-		{placeholder}
-		class={cn(
-			'max-w',
-			!validSuccess && 'border-red-500 !ring-transparent',
-			small && 'h-6 px-2 text-xs',
-		)}
-		oninput={onInputChange}
-		value={val}
-		autofocus={autoFocus}
+	<SvelteOtp
+		numOfInputs={codeLength}
+		separator="&bull;"
+		numberOnly
+		disableDefaultStyle
+		bind:value={valCode}
+		wrapperClass="flex gap-2  items-center"
+		inputClass="border rounded-md h-9 w-10 flex-1 text-center outline-none focus:border-primary text-sm"
+		separatorClass="text-gray-300"
 	/>
 	{#if !validSuccess}
 		<div class={cn('text-[0.8rem] text-red-500', small && 'text-[0.7rem]')}>{validError}</div>

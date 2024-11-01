@@ -1,24 +1,20 @@
 <script lang="ts">
 	import dayjs from 'dayjs';
-
 	import { cn } from '$lib/utils.js';
 
 	import * as Table from '../ui/';
 	import type { TableColumn } from '../types';
 
-	export let item: any;
-	export let value: any;
-	export let col: TableColumn;
-
-	let align = 'left';
-	let val = '';
-
-	$: {
-		align = col.align || 'left';
+	interface Props {
+		item: any;
+		value: any;
+		col: TableColumn;
 	}
 
-	$: {
-		val = value;
+	let { item, value, col }: Props = $props();
+
+	let showValue = $derived.by(() => {
+		let val = value;
 
 		// renderText
 		if (val !== undefined && col.renderText !== undefined) {
@@ -43,12 +39,14 @@
 		if (val === undefined) {
 			val = '';
 		}
-	}
+
+		return val;
+	});
 </script>
 
-<Table.Cell style="text-align:{align}">
+<Table.Cell style="text-align:{col.align || 'left'}">
 	{#if col.type === 'check'}
-		{#if val}
+		{#if !!showValue}
 			<span class="inline-block">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +65,7 @@
 		{/if}
 	{:else}
 		<div class={cn(col.nowrap && 'whitespace-nowrap')}>
-			{val}
+			{showValue}
 		</div>
 	{/if}
 </Table.Cell>

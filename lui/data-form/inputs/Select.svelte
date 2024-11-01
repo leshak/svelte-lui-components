@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { Icon } from 'svelte-icons-pack';
 	import { IoSearchOutline } from 'svelte-icons-pack/io';
 
@@ -8,63 +8,78 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
+	import type { PropChangedEvent } from '../types';
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		value: any | string;
+		values?: any[];
+		label: string;
+		labelHide?: boolean;
+		small?: boolean;
+		prop: string;
+		placeholder?: string;
+		defaultValue?: any;
+		optional?: boolean;
+		onPropChanged?: (event: PropChangedEvent) => void;
+	}
 
-	export let value: any | string;
-	export let values: any[] = [];
+	let {
+		value,
+		values = [],
+		label,
+		labelHide = false,
+		small = false,
+		prop,
+		placeholder = 'Выберите значение',
+		defaultValue = undefined,
+		optional = false,
+		onPropChanged = () => {},
+	}: Props = $props();
 
-	export let label: string;
-	export let labelHide: boolean = false;
-	export let small: boolean = false;
-	export let prop: string;
-	export let placeholder: string = '';
-	export let defaultValue: any = undefined;
-	export let optional: boolean = false;
+	let validSuccess: boolean = $state(true);
+	let validError: string | undefined = $state(undefined);
 
-	let validSuccess: boolean = true;
-	let validError: string | undefined = undefined;
-
-	let filter = '';
-	let val: { value: string; label: string; disabled: boolean };
+	let filter = $state('');
+	let val: string = $state('');
+	const selectedLabel = $derived(
+		value ? values.find((v) => v.val === parseInt(val, 10))?.label : placeholder,
+	);
 
 	function validateExtValue() {
 		onValueChanged(value);
 	}
 
-	$: {
+	$effect(() => {
 		const item = values.find((x) => x.val === value);
 		if (item) {
-			val = {
-				value: item.val,
-				label: item.label,
-				disabled: item.disabled,
-			};
+			val = String(item.val);
 			validateExtValue();
 		}
-	}
+	});
 
 	function onSelectedChange(v: any) {
-		onValueChanged(v.value);
+		onValueChanged(v);
 		filter = '';
 	}
 
 	function onValueChanged(v: any, isInit = false) {
-		const vv = v !== undefined ? v : defaultValue;
+		let vv = v !== undefined ? v : defaultValue;
+		vv = parseInt(vv, 10);
+
 		validSuccess = true;
 		validError = '';
 
 		const idx = values.findIndex((x) => x.val === vv);
 		if (idx === -1) {
 			if (optional || isInit) {
-				dispatch('modelChanged', { success: true, value: undefined, prop });
+				onPropChanged({ success: true, value: undefined, prop });
 			} else {
 				validSuccess = false;
 				validError = 'Неизвестное значение';
-				dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+				onPropChanged({ success: validSuccess, prop, error: validError });
 			}
 		} else {
-			dispatch('modelChanged', { success: validSuccess, value: vv, prop });
+			onPropChanged({ success: validSuccess, value: vv, prop });
 		}
 	}
 
@@ -79,7 +94,7 @@
 			>{label}</Label
 		>
 	{/if}
-	<Select.Root {onSelectedChange} selected={val}>
+	<Select.Root type="single" onValueChange={onSelectedChange} value={String(val)}>
 		<Select.Trigger
 			class={cn(
 				'w-[100%] pr-2',
@@ -87,7 +102,7 @@
 				small && 'h-6 px-2 text-xs',
 			)}
 		>
-			<Select.Value {placeholder} />
+			{selectedLabel}
 		</Select.Trigger>
 		<Select.Content>
 			{#if values.length >= 10}
@@ -95,7 +110,6 @@
 					<Input
 						class="mb-1 h-7 w-[100%] border-0 pl-6 pr-2 text-sm"
 						placeholder="Поиск (всего {values.length} записей)"
-						autofocus
 						bind:value={filter}
 					/>
 					<Icon
@@ -110,11 +124,12 @@
 						.toLowerCase()
 						.includes(filter.toLowerCase())) as v, idx}
 				{#if idx < 10}
-					<Select.Item value={v.val} class={cn(small && 'h-6 px-2 text-xs')}>{v.label}</Select.Item>
+					<Select.Item value={String(v.val)} class={cn(small && 'h-6 px-2 text-xs')}>
+						{v.label}
+					</Select.Item>
 				{/if}
 			{/each}
 		</Select.Content>
-		<Select.Input name={prop} />
 	</Select.Root>
 	{#if !validSuccess}
 		<div class={cn('text-[0.8rem] text-red-500', small && 'text-[0.7rem]')}>{validError}</div>

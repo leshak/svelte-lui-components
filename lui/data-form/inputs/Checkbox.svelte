@@ -1,23 +1,36 @@
 <script lang="ts">
 	import { z } from 'zod';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import { cn } from '$lib/utils.js';
 
 	import { Label } from '$lib/components/ui/label';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
+	import type { PropChangedEvent } from '../types';
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		value: any | number;
+		intType?: boolean;
+		label: string;
+		labelHide?: boolean;
+		small?: boolean;
+		prop: string;
+		defaultValue?: any;
+		optional?: boolean;
+		onPropChanged?: (event: PropChangedEvent) => void;
+	}
 
-	export let value: any | number;
-	export let intType = false;
-
-	export let label: string;
-	export let labelHide: boolean = false;
-	export let small: boolean = false;
-	export let prop: string;
-	export let defaultValue: any = false;
-	export let optional: boolean = false;
+	let {
+		value,
+		intType = false,
+		label,
+		labelHide = false,
+		small = false,
+		prop,
+		defaultValue = false,
+		optional = false,
+		onPropChanged = () => {},
+	}: Props = $props();
 
 	let validator:
 		| z.ZodNumber
@@ -28,10 +41,7 @@
 	let validSuccess: boolean = true;
 	let validError: string | undefined = undefined;
 
-	let checked: boolean;
-	$: {
-		checked = intType ? value === 1 : value;
-	}
+	let checked: boolean = $derived(intType ? value === 1 : value);
 
 	function onCheckedChange(checked: string | boolean) {
 		onValueChanged(intType ? (checked ? 1 : 0) : checked);
@@ -43,7 +53,7 @@
 		}
 
 		let vv = v !== undefined ? v : defaultValue;
-		dispatch('modelChanged', { success: validSuccess, value: vv, prop });
+		onPropChanged({ success: validSuccess, value: vv, prop });
 	}
 
 	function validateInitValue() {

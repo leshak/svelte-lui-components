@@ -1,44 +1,60 @@
 <script lang="ts">
 	import dot from 'dot-object';
 
-	import { DataFormType, type DataFormProp } from './types';
+	import { DataFormType, type DataFormProp, type PropChangedEvent } from './types';
 	import { Label } from '$lib/components/ui/label';
 	import { cn } from '$lib/utils.js';
 
 	import Text from './inputs/Text.svelte';
 	import Debug from './Debug.svelte';
-	import Tag from './inputs/Tag.svelte';
-	import Number from './inputs/NumberInput.svelte';
-	import Select from './inputs/Select.svelte';
-	import RadioGroup from './inputs/RadioGroup.svelte';
-	import MultiSelect from './inputs/MultiSelect.svelte';
-	import Checkbox from './inputs/Checkbox.svelte';
-	import NumberMinMax from './inputs/NumberMinMax.svelte';
+	import Number from './inputs/Number.svelte';
 	import Phone from './inputs/Phone.svelte';
 	import Password from './inputs/Password.svelte';
+	import NumberMinMax from './inputs/NumberMinMax.svelte';
+	import Select from './inputs/Select.svelte';
+	import Tag from './inputs/Tag.svelte';
+	import MultiSelect from './inputs/MultiSelect.svelte';
+	import RadioGroup from './inputs/RadioGroup.svelte';
+	import Checkbox from './inputs/Checkbox.svelte';
+	import { onMount } from 'svelte';
+	import OtpCode from './inputs/OtpCode.svelte';
 
 	dot.keepArray = true;
 
-	export let model = {};
-	export let isValid: boolean;
-	export let form: DataFormProp[] = [];
-	export let tableView: boolean = false;
-	export let debug: number = 0;
+	interface Props {
+		model: any;
+		isValid: boolean;
+		form?: DataFormProp[];
+		tableView?: boolean;
+		debug?: number;
+	}
+
+	let {
+		model = $bindable({}),
+		isValid = $bindable(),
+		form = [],
+		tableView = false,
+		debug = 0,
+	}: Props = $props();
 
 	let isValidByProps: any = {};
 
 	// dotted model
-	let planeModel: any = {};
-	let keepModelPointer: any;
+	let planeModel: any = $state(dot.dot(model));
+	let keepModelPointer: any = $state();
 
-	$: {
+	// $effect.pre(() => {
+	// 	console.log('$effect.pre');
+	// });
+
+	$effect(() => {
 		if (keepModelPointer !== model) {
 			planeModel = dot.dot(model);
 		}
-	}
+	});
 
-	function onPropChanged(event: CustomEvent<any>) {
-		const { value, prop, success, error } = event.detail;
+	function onPropChanged(event: PropChangedEvent) {
+		const { value, prop, success, error } = event;
 
 		if (success && planeModel[prop] !== value) {
 			planeModel = {
@@ -79,18 +95,12 @@
 							{#if item.type !== DataFormType.Divider}
 								<td class="py-1.5">
 									{#if item.type === DataFormType.Text}
-										<Text
-											{...item}
-											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
-											labelHide
-											small
-										/>
+										<Text {...item} value={planeModel[item.prop]} {onPropChanged} labelHide small />
 									{:else if item.type === DataFormType.Number}
 										<Number
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											labelHide
 											small
 										/>
@@ -98,7 +108,7 @@
 										<Phone
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											labelHide
 											small
 										/>
@@ -106,7 +116,7 @@
 										<Password
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											labelHide
 											small
 										/>
@@ -114,15 +124,7 @@
 										<NumberMinMax
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
-											labelHide
-											small
-										/>
-									{:else if item.type === DataFormType.Tag}
-										<Tag
-											{...item}
-											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											labelHide
 											small
 										/>
@@ -130,15 +132,17 @@
 										<Select
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											labelHide
 											small
 										/>
+									{:else if item.type === DataFormType.Tag}
+										<Tag {...item} value={planeModel[item.prop]} {onPropChanged} labelHide small />
 									{:else if item.type === DataFormType.MultiSelect}
 										<MultiSelect
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											labelHide
 											small
 										/>
@@ -146,7 +150,7 @@
 										<RadioGroup
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											intType
 											labelHide
 											small
@@ -155,7 +159,7 @@
 										<Checkbox
 											{...item}
 											value={planeModel[item.prop]}
-											on:modelChanged={onPropChanged}
+											{onPropChanged}
 											labelHide
 											small
 										/>
@@ -179,30 +183,27 @@
 			{#if !item.hide}
 				<div class="grid gap-[2]" style="grid-column: span {item.span || 24};">
 					{#if item.type === DataFormType.Text}
-						<Text {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<Text {...item} value={planeModel[item.prop]} {onPropChanged} />
+					{:else if item.type === DataFormType.OtpCode}
+						<OtpCode {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.Number}
-						<Number {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<Number {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.Phone}
-						<Phone {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<Phone {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.Password}
-						<Password {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<Password {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.NumberMinMax}
-						<NumberMinMax {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
-					{:else if item.type === DataFormType.Tag}
-						<Tag {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<NumberMinMax {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.Select}
-						<Select {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<Select {...item} value={planeModel[item.prop]} {onPropChanged} />
+					{:else if item.type === DataFormType.Tag}
+						<Tag {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.MultiSelect}
-						<MultiSelect {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<MultiSelect {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.RadioGroupInt}
-						<RadioGroup
-							{...item}
-							value={planeModel[item.prop]}
-							on:modelChanged={onPropChanged}
-							intType
-						/>
+						<RadioGroup {...item} value={planeModel[item.prop]} {onPropChanged} intType />
 					{:else if item.type === DataFormType.Checkbox}
-						<Checkbox {...item} value={planeModel[item.prop]} on:modelChanged={onPropChanged} />
+						<Checkbox {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else}
 						<div class="grid gap-2">
 							<Label for={item.prop}>{item.label} - Unknown</Label>

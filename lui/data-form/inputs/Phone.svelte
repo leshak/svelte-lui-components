@@ -1,25 +1,39 @@
 <script lang="ts">
 	import { z } from 'zod';
 	import { phone } from 'phone';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import { cn } from '$lib/utils.js';
 
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
+	import type { PropChangedEvent } from '../types';
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		value: any | string;
+		label: string;
+		labelHide?: boolean;
+		small?: boolean;
+		prop: string;
+		placeholder?: string;
+		defaultValue?: any;
+		optional?: boolean;
+		autoFocus?: boolean;
+		onPropChanged?: (event: PropChangedEvent) => void;
+	}
 
-	export let value: any | string;
-
-	export let label: string;
-	export let labelHide: boolean = false;
-	export let small: boolean = false;
-	export let prop: string;
-	export let placeholder: string = '';
-	export let defaultValue: any = '';
-	export let optional: boolean = false;
-	export let autoFocus: boolean = false;
+	let {
+		value,
+		label,
+		labelHide = false,
+		small = false,
+		prop,
+		placeholder = '',
+		defaultValue = '',
+		optional = false,
+		autoFocus = false,
+		onPropChanged = () => {},
+	}: Props = $props();
 
 	let validator:
 		| z.ZodString
@@ -28,13 +42,10 @@
 		| z.ZodOptional<z.ZodDefault<z.ZodString>>
 		| z.ZodOptional<z.ZodString>;
 
-	let validSuccess: boolean = true;
-	let validError: string | undefined = undefined;
+	let validSuccess: boolean = $state(true);
+	let validError: string | undefined = $state(undefined);
 
-	let val: string;
-	$: {
-		val = value;
-	}
+	let val: string = $derived(value);
 
 	function onInputChange(ev: any) {
 		const val = ev.target.value;
@@ -51,16 +62,16 @@
 			if (!phoneValid.isValid) {
 				validSuccess = false;
 				validError = 'Некорректный номер';
-				dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+				onPropChanged({ success: validSuccess, prop, error: validError });
 			} else {
-				dispatch('modelChanged', { success: true, value: phoneValid.phoneNumber, prop });
+				onPropChanged({ success: true, value: phoneValid.phoneNumber, prop });
 			}
 		} else {
 			validError = '';
 			if (Array.isArray(valid.error.issues) && valid.error.issues[0]) {
 				validError = valid.error.issues[0].message;
 			}
-			dispatch('modelChanged', { success: false, prop, error: validError });
+			onPropChanged({ success: false, prop, error: validError });
 
 			if (!showError) {
 				validError = '';
@@ -108,7 +119,7 @@
 			!validSuccess && 'border-red-500 !ring-transparent',
 			small && 'h-6 px-2 text-xs',
 		)}
-		on:input={onInputChange}
+		oninput={onInputChange}
 		value={val}
 		autofocus={autoFocus}
 	/>

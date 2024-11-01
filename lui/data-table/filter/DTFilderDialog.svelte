@@ -1,34 +1,35 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
 	import { DataForm } from '$lib/components/lui/data-form';
 	import type { DataFormProp } from '../../data-form/types';
 
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		open?: boolean;
+		filter?: any;
+		filterForm?: DataFormProp[];
+		onApplyFilter: (ev: any) => void;
+	}
 
-	export let open: boolean = false;
-	export let filter: any = {};
-	export let filterForm: DataFormProp[] = [];
+	let { open = $bindable(false), filter = {}, filterForm = [], onApplyFilter }: Props = $props();
 
-	let isValid = true;
-	let filterModel = {};
+	let isValid = $state(true);
+	let filterModel = $state({});
 
 	function onLoadFilter() {
 		filterModel = { ...filter };
 	}
 
-	$: {
+	$effect(() => {
 		if (open) {
 			onLoadFilter();
 		}
-	}
+	});
 
-	function onApplyFilter(ev: Event) {
+	function setFilter(ev: Event) {
 		ev.preventDefault();
-		dispatch('dtable-apply-filter', { filter: filterModel, isValid });
+		onApplyFilter({ filterValue: filterModel, isValid: true });
 	}
 </script>
 
@@ -41,8 +42,8 @@
 			<DataForm bind:model={filterModel} bind:isValid form={filterForm} tableView debug={0} />
 		{/if}
 		<Dialog.Footer>
-			<Button variant="outline" on:click={() => (open = false)}>Отмена</Button>
-			<Button disabled={!isValid} on:click={onApplyFilter}>Применить</Button>
+			<Button variant="outline" onclick={() => (open = false)}>Отмена</Button>
+			<Button disabled={!isValid} onclick={setFilter}>Применить</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>

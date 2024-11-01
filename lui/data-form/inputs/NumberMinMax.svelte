@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { z } from 'zod';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { Icon } from 'svelte-icons-pack';
 	import { TrOutlineTilde } from 'svelte-icons-pack/tr';
 
@@ -8,32 +8,45 @@
 
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
+	import type { PropChangedEvent } from '../types';
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		value: any | number[];
+		label: string;
+		labelHide?: boolean;
+		small?: boolean;
+		prop: string;
+		placeholder?: string;
+		defaultValue?: any;
+		optional?: boolean;
+		onPropChanged?: (event: PropChangedEvent) => void;
+	}
 
-	export let value: any | number[];
-
-	export let label: string;
-	export let labelHide: boolean = false;
-	export let small: boolean = false;
-	export let prop: string;
-	export let placeholder: string = '';
-	export let defaultValue: any = [0, 0];
-	export let optional: boolean = false;
+	let {
+		value,
+		label,
+		labelHide = false,
+		small = false,
+		prop,
+		placeholder = '',
+		defaultValue = [0, 0],
+		optional = false,
+		onPropChanged = () => {},
+	}: Props = $props();
 
 	const validator = z.coerce.number();
 
-	let validSuccess: boolean = true;
-	let validError: string | undefined = undefined;
+	let validSuccess: boolean = $state(true);
+	let validError: string | undefined = $state(undefined);
 
-	let valMin: number;
-	let valMax: number;
-	$: {
+	let valMin: number = $state(0);
+	let valMax: number = $state(0);
+	$effect(() => {
 		if (value !== undefined && value.length === 2) {
 			valMin = value[0];
 			valMax = value[1];
 		}
-	}
+	});
 
 	function onInputChangeMin(ev: any) {
 		const val = ev.target.value;
@@ -62,9 +75,9 @@
 				if (vdMin.data > vdMax.data) {
 					validSuccess = false;
 					validError = 'Неверное значение: мин > макс';
-					dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+					onPropChanged({ success: validSuccess, prop, error: validError });
 				} else {
-					dispatch('modelChanged', {
+					onPropChanged({
 						success: validSuccess,
 						value: [vdMin.data, vdMax.data],
 						prop,
@@ -76,7 +89,7 @@
 
 				validSuccess = false;
 				validError = 'Неверное значение';
-				dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+				onPropChanged({ success: validSuccess, prop, error: validError });
 			}
 		}
 	}
@@ -106,7 +119,7 @@
 				!validSuccess && 'border-red-500 !ring-transparent',
 				small && 'h-6 px-2 text-xs',
 			)}
-			on:input={onInputChangeMin}
+			oninput={onInputChangeMin}
 			value={valMin}
 		/>
 		<span><Icon src={TrOutlineTilde} className={cn(small ? 'h-2 w-2' : 'h-3 w-3')} /></span>
@@ -119,7 +132,7 @@
 				!validSuccess && 'border-red-500 !ring-transparent',
 				small && 'h-6 px-2 text-xs',
 			)}
-			on:input={onInputChangeMax}
+			oninput={onInputChangeMax}
 			value={valMax}
 		/>
 	</div>

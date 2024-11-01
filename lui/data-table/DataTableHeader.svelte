@@ -8,11 +8,19 @@
 	import { BsArrowUp } from 'svelte-icons-pack/bs';
 	import { BsArrowDown } from 'svelte-icons-pack/bs';
 
-	export let row1: TableGroupColumn[] = [];
-	export let row2: TableColumn[] = [];
+	interface Props {
+		row1?: TableGroupColumn[];
+		row2?: TableColumn[];
+		sortProp?: string;
+		sortOrder?: number;
+	}
 
-	export let sortProp: string = '';
-	export let sortOrder: number = 0;
+	let {
+		row1 = [],
+		row2 = [],
+		sortProp = $bindable(''),
+		sortOrder = $bindable(0),
+	}: Props = $props();
 
 	function onSwitchSort(prop: string) {
 		if (sortProp === prop) {
@@ -44,7 +52,7 @@
 									'-mr-1 ml-2 opacity-35 transition-all hover:opacity-100',
 									it.prop === sortProp && 'opacity-100',
 								)}
-								on:click={() => onSwitchSort(it.prop)}
+								onclick={() => onSwitchSort(it.prop)}
 							>
 								{#if it.prop === sortProp}
 									<Icon src={sortOrder === 1 ? BsArrowUp : BsArrowDown} size="12" />

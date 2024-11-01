@@ -1,23 +1,36 @@
 <script lang="ts">
 	import { z } from 'zod';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import { cn } from '$lib/utils.js';
 
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
+	import type { PropChangedEvent } from '../types';
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		value: any | number;
+		label: string;
+		labelHide?: boolean;
+		small?: boolean;
+		prop: string;
+		placeholder?: string;
+		defaultValue?: any;
+		optional?: boolean;
+		onPropChanged?: (event: PropChangedEvent) => void;
+	}
 
-	export let value: any | number;
-
-	export let label: string;
-	export let labelHide: boolean = false;
-	export let small: boolean = false;
-	export let prop: string;
-	export let placeholder: string = '';
-	export let defaultValue: any = '';
-	export let optional: boolean = false;
+	let {
+		value,
+		label,
+		labelHide = false,
+		small = false,
+		prop,
+		placeholder = '',
+		defaultValue = '',
+		optional = false,
+		onPropChanged = () => {},
+	}: Props = $props();
 
 	let validator:
 		| z.ZodNumber
@@ -25,13 +38,10 @@
 		| z.ZodDefault<z.ZodOptional<z.ZodNumber>>
 		| z.ZodDefault<z.ZodNumber>;
 
-	let validSuccess: boolean = true;
-	let validError: string | undefined = undefined;
+	let validSuccess: boolean = $state(true);
+	let validError: string | undefined = $state(undefined);
 
-	let val: string;
-	$: {
-		val = value;
-	}
+	let val: string = $derived(value);
 
 	function onInputChange(ev: any) {
 		const val = ev.target.value;
@@ -42,7 +52,7 @@
 		if (v === '') {
 			validSuccess = false;
 			validError = '';
-			dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+			onPropChanged({ success: validSuccess, prop, error: validError });
 			return;
 		}
 
@@ -50,13 +60,13 @@
 
 		validSuccess = valid.success;
 		if (valid.success) {
-			dispatch('modelChanged', { success: validSuccess, value: valid.data, prop });
+			onPropChanged({ success: validSuccess, value: valid.data, prop });
 		} else {
 			validError = '';
 			if (Array.isArray(valid.error.issues) && valid.error.issues[0]) {
 				validError = valid.error.issues[0].message;
 			}
-			dispatch('modelChanged', { success: validSuccess, prop, error: validError });
+			onPropChanged({ success: validSuccess, prop, error: validError });
 		}
 	}
 
@@ -97,7 +107,7 @@
 			!validSuccess && 'border-red-500 !ring-transparent',
 			small && 'h-6 px-2 text-xs',
 		)}
-		on:input={onInputChange}
+		oninput={onInputChange}
 		value={val}
 	/>
 	{#if !validSuccess && validError}

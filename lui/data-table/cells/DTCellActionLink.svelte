@@ -6,21 +6,25 @@
 	import * as Table from '../ui';
 	import type { TableColumn } from '../types';
 
-	export let item: any;
-	export let value: any;
-	export let col: TableColumn;
+	interface Props {
+		item: any;
+		value: any;
+		col: TableColumn;
+	}
 
-	let linkUrl = '';
+	let { item, col }: Props = $props();
 
-	$: {
+	let linkUrl = $state('');
+
+	$effect(() => {
 		if (col.actionLink !== undefined) {
 			const v = gv(item, col.prop);
 			linkUrl = col.actionLink(v, item);
 		}
-	}
+	});
 </script>
 
-<Table.Cell class="p-0 opacity-70 hover:text-primary hover:opacity-100 w-8">
+<Table.Cell class="w-8 p-0 opacity-70 hover:text-primary hover:opacity-100">
 	<a
 		href={linkUrl}
 		class="hint--right block px-2 py-1.5 align-middle"

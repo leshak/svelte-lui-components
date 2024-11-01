@@ -5,24 +5,37 @@
 
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { roundPlus, timeout } from '$utils/common';
+	import { roundPlus } from '$utils/common';
 	import { eeAddPage, eeCreateHeader, eeInit, eeSaveFile } from './excel_export';
 
 	const ExcelExportStep = 20; // размер выгрузки за шаг
 
-	export let open: boolean = false;
-	export let apiLoader: DataTableApiLoader;
-	export let filter: object = {};
-	export let total: number = 0;
-	export let props: string[] = [];
-	export let sortProp: string = '';
-	export let sortOrder: number = 0;
+	interface Props {
+		open?: boolean;
+		apiLoader: DataTableApiLoader;
+		filter?: object;
+		total?: number;
+		props?: string[];
+		sortProp?: string;
+		sortOrder?: number;
+		row1?: TableGroupColumn[];
+		row2?: TableColumn[];
+	}
 
-	export let row1: TableGroupColumn[] = [];
-	export let row2: TableColumn[] = [];
+	let {
+		open = $bindable(false),
+		apiLoader,
+		filter = {},
+		total = 0,
+		props = [],
+		sortProp = '',
+		sortOrder = 0,
+		row1 = [],
+		row2 = [],
+	}: Props = $props();
 
-	let progress = 0;
-	let breakExport = false;
+	let progress = $state(0);
+	let breakExport = $state(false);
 
 	async function loadData(page: number) {
 		console.log('load Page', page);
@@ -62,12 +75,12 @@
 		breakExport = true;
 	}
 
-	$: {
+	$effect(() => {
 		if (open) {
 			progress = 0;
 			breakExport = false;
 		}
-	}
+	});
 </script>
 
 <Dialog.Root bind:open>
@@ -87,9 +100,9 @@
 			/>
 		</div>
 		<Dialog.Footer>
-			<Button variant="outline" on:click={closeDialog}>Закрыть</Button>
+			<Button variant="outline" onclick={closeDialog}>Закрыть</Button>
 			{#if progress === 0}
-				<Button on:click={startExport}>Экспорт</Button>
+				<Button onclick={startExport}>Экспорт</Button>
 			{/if}
 		</Dialog.Footer>
 	</Dialog.Content>

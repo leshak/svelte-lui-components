@@ -8,9 +8,9 @@
 		class: className,
 		children,
 		...restProps
-	}: WithElementRef<HTMLAttributes<HTMLTableSectionElement>> = $props();
+	}: WithElementRef<HTMLAttributes<HTMLElement>> = $props();
 </script>
 
-<thead bind:this={ref} class={cn("[&_tr]:border-b", className)} {...restProps}>
+<caption bind:this={ref} class={cn("text-muted-foreground mt-4 text-sm", className)} {...restProps}>
 	{@render children?.()}
-</thead>
+</caption>

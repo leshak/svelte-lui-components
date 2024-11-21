@@ -16,7 +16,6 @@
 	import MultiSelect from './inputs/MultiSelect.svelte';
 	import RadioGroup from './inputs/RadioGroup.svelte';
 	import Checkbox from './inputs/Checkbox.svelte';
-	import { onMount } from 'svelte';
 	import OtpCode from './inputs/OtpCode.svelte';
 
 	dot.keepArray = true;
@@ -178,10 +177,10 @@
 	</div>
 {:else}
 	<!-- View as form -->
-	<div class="grid grid-cols-[repeat(24,1fr)] gap-3 bg-white">
+	<div class="grid grid-cols-[repeat(24,1fr)] gap-x-3 gap-y-3 bg-white">
 		{#each form as item}
 			{#if !item.hide}
-				<div class="grid gap-[2]" style="grid-column: span {item.span || 24};">
+				<div class="grid gap-2" style="grid-column: span {item.span || 24};">
 					{#if item.type === DataFormType.Text}
 						<Text {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.OtpCode}

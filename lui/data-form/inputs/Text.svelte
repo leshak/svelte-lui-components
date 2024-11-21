@@ -18,6 +18,7 @@
 		defaultValue?: any;
 		optional?: boolean;
 		autoFocus?: boolean;
+		disabled?: boolean;
 		onPropChanged?: (event: PropChangedEvent) => void;
 	}
 
@@ -31,6 +32,7 @@
 		defaultValue = '',
 		optional = false,
 		autoFocus = false,
+		disabled = false,
 		onPropChanged = () => {},
 	}: Props = $props();
 
@@ -113,6 +115,7 @@
 		oninput={onInputChange}
 		value={val}
 		autofocus={autoFocus}
+		{disabled}
 	/>
 	{#if !validSuccess}
 		<div class={cn('text-[0.8rem] text-red-500', small && 'text-[0.7rem]')}>{validError}</div>

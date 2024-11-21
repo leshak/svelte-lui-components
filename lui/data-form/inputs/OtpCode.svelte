@@ -4,9 +4,11 @@
 
 	import { cn } from '$lib/utils.js';
 
+	import * as InputOTP from '$lib/components/ui/input-otp/';
 	import { Label } from '$lib/components/ui/label';
-	import type { PropChangedEvent } from '../types';
-	import SvelteOtp from '../otp-input/SvelteOtp.svelte';
+	import { REGEXP_ONLY_DIGITS, REGEXP_ONLY_CHARS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'bits-ui';
+
+	import { DataFormOtpCodeType, type PropChangedEvent } from '../types';
 
 	interface Props {
 		value: any | string;
@@ -19,6 +21,7 @@
 		optional?: boolean;
 		autoFocus?: boolean;
 		codeLength?: number;
+		codeType?: number;
 		onPropChanged?: (event: PropChangedEvent) => void;
 	}
 
@@ -29,6 +32,8 @@
 		small = false,
 		prop,
 		codeLength = 4,
+		codeType = DataFormOtpCodeType.Digits,
+		autoFocus = false,
 		onPropChanged = () => {},
 	}: Props = $props();
 
@@ -50,7 +55,6 @@
 		if (v === undefined) return;
 
 		const valid = validator.safeParse(v);
-
 		validSuccess = valid.success;
 		if (valid.success) {
 			onPropChanged({ success: true, value: valid.data, prop });
@@ -83,16 +87,25 @@
 			>{label}</Label
 		>
 	{/if}
-	<SvelteOtp
-		numOfInputs={codeLength}
-		separator="&bull;"
-		numberOnly
-		disableDefaultStyle
+
+	<InputOTP.Root
 		bind:value={valCode}
-		wrapperClass="flex gap-2  items-center"
-		inputClass="border rounded-md h-9 w-10 flex-1 text-center outline-none focus:border-primary text-sm"
-		separatorClass="text-gray-300"
-	/>
+		maxlength={codeLength}
+		pattern={codeType === DataFormOtpCodeType.Digits
+			? REGEXP_ONLY_DIGITS
+			: codeType === DataFormOtpCodeType.OnlyChars
+				? REGEXP_ONLY_CHARS
+				: REGEXP_ONLY_DIGITS_AND_CHARS}
+	>
+		{#snippet children({ cells })}
+			<InputOTP.Group class="w-full">
+				{#each cells as cell}
+					<InputOTP.Slot class="w-full" {cell} />
+				{/each}
+			</InputOTP.Group>
+		{/snippet}
+	</InputOTP.Root>
+
 	{#if !validSuccess}
 		<div class={cn('text-[0.8rem] text-red-500', small && 'text-[0.7rem]')}>{validError}</div>
 	{/if}

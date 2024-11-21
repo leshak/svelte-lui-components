@@ -1,25 +1,3 @@
-export interface DataFormProp {
-	type: number;
-	label: string;
-	prop: string;
-	span?: number;
-	defaultValue?: string | number | boolean | string[] | number[];
-	optional?: boolean;
-	placeholder?: string;
-	values?: string[] | DataFormPropSelectId[];
-	vertical?: boolean;
-	intType?: boolean;
-	hide?: boolean;
-	labelHide?: boolean;
-	autoFocus?: boolean;
-	codeLength?: number;
-}
-
-export interface DataFormPropSelectId {
-	val: number | string;
-	label: string;
-}
-
 export const DataFormType = {
 	Text: 0,
 	Number: 1,
@@ -37,6 +15,35 @@ export const DataFormType = {
 	Password: 13,
 	OtpCode: 14,
 };
+
+export const DataFormOtpCodeType = {
+	Digits: 0,
+	OnlyChars: 1,
+	DigitsAndChars: 2,
+};
+
+export interface DataFormProp {
+	type: number;
+	label: string;
+	prop: string;
+	span?: number;
+	defaultValue?: string | number | boolean | string[] | number[];
+	optional?: boolean;
+	placeholder?: string;
+	values?: string[] | DataFormPropSelectId[];
+	vertical?: boolean;
+	intType?: boolean;
+	hide?: boolean;
+	labelHide?: boolean;
+	autoFocus?: boolean;
+	codeLength?: number;
+	disabled?: boolean;
+}
+
+export interface DataFormPropSelectId {
+	val: number | string;
+	label: string;
+}
 
 export type TSelectItem = {
 	val: number | string;

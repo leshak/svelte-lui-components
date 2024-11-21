@@ -20,6 +20,7 @@
 		placeholder?: string;
 		defaultValue?: any;
 		optional?: boolean;
+		idIsString?: boolean;
 		onPropChanged?: (event: PropChangedEvent) => void;
 	}
 
@@ -33,6 +34,7 @@
 		placeholder = 'Выберите значение',
 		defaultValue = undefined,
 		optional = false,
+		idIsString = false,
 		onPropChanged = () => {},
 	}: Props = $props();
 
@@ -40,38 +42,31 @@
 	let validError: string | undefined = $state(undefined);
 
 	let filter = $state('');
-	let val: string = $state('');
-	const selectedLabel = $derived(
-		value ? values.find((v) => v.val === parseInt(val, 10))?.label : placeholder,
-	);
-
-	function validateExtValue() {
-		onValueChanged(value);
-	}
-
-	$effect(() => {
-		const item = values.find((x) => x.val === value);
-		if (item) {
-			val = String(item.val);
-			validateExtValue();
-		}
+	const selectedLabel = $derived.by(() => {
+		const fixValue = idIsString ? value : parseInt(value, 10);
+		return values.find((v) => v.val === fixValue)?.label || placeholder;
 	});
 
 	function onSelectedChange(v: any) {
+		console.log('v', v);
+
 		onValueChanged(v);
 		filter = '';
 	}
 
-	function onValueChanged(v: any, isInit = false) {
+	function onValueChanged(v: any) {
 		let vv = v !== undefined ? v : defaultValue;
-		vv = parseInt(vv, 10);
+
+		if (!idIsString) {
+			vv = parseInt(vv, 10);
+		}
 
 		validSuccess = true;
 		validError = '';
 
 		const idx = values.findIndex((x) => x.val === vv);
 		if (idx === -1) {
-			if (optional || isInit) {
+			if (optional) {
 				onPropChanged({ success: true, value: undefined, prop });
 			} else {
 				validSuccess = false;
@@ -84,7 +79,7 @@
 	}
 
 	onMount(() => {
-		onValueChanged(value, true);
+		onValueChanged(value);
 	});
 </script>
 
@@ -94,7 +89,7 @@
 			>{label}</Label
 		>
 	{/if}
-	<Select.Root type="single" onValueChange={onSelectedChange} value={String(val)}>
+	<Select.Root type="single" onValueChange={onSelectedChange} value={String(value)}>
 		<Select.Trigger
 			class={cn(
 				'w-[100%] pr-2',

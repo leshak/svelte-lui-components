@@ -38,6 +38,7 @@ export interface DataFormProp {
 	autoFocus?: boolean;
 	codeLength?: number;
 	disabled?: boolean;
+	idIsString?: boolean;
 }
 
 export interface DataFormPropSelectId {

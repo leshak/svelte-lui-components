@@ -13,7 +13,7 @@ unzip -qq $ZIPFILE "svelte-lui-components-master/lui/*" -d $TEMPD
 
 echo "Backup..."
 time_stamp=$(date +%Y-%m-%d_%H-%M-%S)
-tar cvjSf "src/lib/components/lui_${time_stamp}.tar.bz2" src/lib/components/lui/
+tar cjf "src/lib/components/lui_${time_stamp}.tar.bz2" src/lib/components/lui/
 
 rm -rf src/lib/components/lui
 mkdir -p src/lib/components/lui

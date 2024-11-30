@@ -11,6 +11,10 @@ curl -o $ZIPFILE -s -L https://github.com/leshak/svelte-lui-components/archive/r
 echo "Extracting..."
 unzip -qq $ZIPFILE "svelte-lui-components-master/lui/*" -d $TEMPD
 
+echo "Backup..."
+time_stamp=$(date +%Y-%m-%d_%H-%M-%S)
+tar cjf "src/lib/components/lui_${time_stamp}.tar.bz2" src/lib/components/lui/.
+
 rm -rf src/lib/components/lui
 mkdir -p src/lib/components/lui
 mv $TEMPD/svelte-lui-components-master/lui/* src/lib/components/lui

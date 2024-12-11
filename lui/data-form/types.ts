@@ -14,6 +14,7 @@ export const DataFormType = {
 	Phone: 12,
 	Password: 13,
 	OtpCode: 14,
+	TextArea: 15,
 };
 
 export const DataFormOtpCodeType = {

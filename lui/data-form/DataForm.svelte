@@ -17,6 +17,8 @@
 	import RadioGroup from './inputs/RadioGroup.svelte';
 	import Checkbox from './inputs/Checkbox.svelte';
 	import OtpCode from './inputs/OtpCode.svelte';
+	import Date from './inputs/Date.svelte';
+	import TextArea from './inputs/TextArea.svelte';
 
 	dot.keepArray = true;
 
@@ -103,6 +105,8 @@
 											labelHide
 											small
 										/>
+									{:else if item.type === DataFormType.Date}
+										<Date {...item} value={planeModel[item.prop]} {onPropChanged} labelHide small />
 									{:else if item.type === DataFormType.Phone}
 										<Phone
 											{...item}
@@ -177,14 +181,18 @@
 	</div>
 {:else}
 	<!-- View as form -->
-	<div class="grid grid-cols-[repeat(24,1fr)] gap-x-3 gap-y-3 bg-white">
+	<div class="grid grid-cols-[repeat(24,1fr)] gap-x-3 gap-y-4 bg-white">
 		{#each form as item}
 			{#if !item.hide}
 				<div class="grid gap-2" style="grid-column: span {item.span || 24};">
 					{#if item.type === DataFormType.Text}
 						<Text {...item} value={planeModel[item.prop]} {onPropChanged} />
+					{:else if item.type === DataFormType.TextArea}
+						<TextArea {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.OtpCode}
 						<OtpCode {...item} value={planeModel[item.prop]} {onPropChanged} />
+					{:else if item.type === DataFormType.Date}
+						<Date {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.Number}
 						<Number {...item} value={planeModel[item.prop]} {onPropChanged} />
 					{:else if item.type === DataFormType.Phone}
